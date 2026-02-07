@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "534678514265",
+    "firebase_url": "https://nagare-72c81-default-rtdb.firebaseio.com",
+    "project_id": "nagare-72c81",
+    "storage_bucket": "nagare-72c81.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534678514265:android:8fdaafc23065f1d8775f48",
+        "android_client_info": {
+          "package_name": "com.example.nagare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ4N_G8ExYk3rHlCs_I_RSrW9HPEqrmgM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
