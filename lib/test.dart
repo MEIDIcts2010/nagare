@@ -1,17 +1,34 @@
-import 'dart:convert';
-import 'package:xxh3/xxh3.dart';
+import 'package:flutter/material.dart';
+import 'package:webview_windows/webview_windows.dart';
 
 void main() {
-  final String data = "foobar";
+  runApp(test());
+}
 
-  // Конвертируем строку в UTF-8 байты
-  final bytes = utf8.encode(data);
-  print('Bytes: $bytes');
+class test extends StatefulWidget {
+  const test({super.key});
 
-  // Хэшируем с помощью XXH3
-  final int hashInt = xxh3(bytes); // как число
-  final String hashHex = xxh3String(seed: 0, bytes); // как hex-строка
+  @override
+  State<test> createState() => _testState();
+}
 
-  print('XXH3‑64 (int): $hashInt');
-  print('XXH3‑64 (hex): $hashHex');
+class _testState extends State<test> {
+  final _controller = WebviewController();
+
+  @override
+  void initState() {
+    super.initState();
+    initStating();
+  }
+
+  Future<void> initStating() async {
+    await _controller.initialize();
+    await _controller.loadUrl("https://vkvideo.ru");
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(home: Scaffold(body: Webview(_controller)));
+  }
 }

@@ -1,8 +1,10 @@
 import 'package:nagare/Activity/youtube_search.dart';
+import 'package:nagare/Widgets/chat_widget%20+%20logic.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class YoutubePlayerWidget extends StatefulWidget {
   final String videoId;
@@ -19,11 +21,25 @@ class YoutubePlayerWidget extends StatefulWidget {
 
 class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
   late YoutubePlayerController _controller;
-
+  bool _hostTest = false;
   double _currentTime = 0;
   double _duration = 0;
+  bool _isActuallyPlaying = false;
 
   Timer? _timer;
+
+  Future<void> _checkHost() async {
+    final id = FirebaseAuth.instance.currentUser!.uid;
+    final hostSnapshot = await FirebaseDatabase.instance
+        .ref('rooms/${widget.roomName}/host')
+        .get();
+
+    if (id == hostSnapshot.value.toString()) {
+      setState(() {
+        _hostTest = true;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -38,7 +54,38 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
       ),
     );
 
-    _startTimeUpdater();
+    _controller.listen((event) {
+      if (event.playerState == PlayerState.playing) {
+        _isActuallyPlaying = true;
+      } else if (event.playerState == PlayerState.paused) {
+        _isActuallyPlaying = false;
+      }
+    });
+
+    _checkHost().then((_) {
+      _startTimeUpdater();
+      _startPlayerStateSync(); // 👈 ВОТ ГЛАВНОЕ
+    });
+  }
+
+  void _startPlayerStateSync() {
+    FirebaseDatabase.instance
+        .ref('rooms/${widget.roomName}/playerState')
+        .onValue
+        .listen((event) async {
+          if (_hostTest) return;
+
+          final value = event.snapshot.value;
+          if (value == null) return;
+
+          final shouldPlay = value == true || value.toString() == "true";
+
+          if (shouldPlay) {
+            _controller.playVideo();
+          } else {
+            _controller.pauseVideo();
+          }
+        });
   }
 
   void _startTimeUpdater() {
@@ -47,6 +94,22 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
 
       final currentTime = await _controller.currentTime;
       final duration = await _controller.duration;
+
+      if (_hostTest) {
+        FirebaseDatabase.instance
+            .ref('rooms/${widget.roomName}/currentTimeWatch')
+            .set(currentTime.toString()); // синхронизация с базой
+      } else {
+        final snapshot = await FirebaseDatabase.instance
+            .ref('rooms/${widget.roomName}/currentTimeWatch')
+            .get();
+        var hostTime = double.tryParse(snapshot.value.toString());
+        var razn = hostTime! - currentTime;
+
+        if (razn.abs() > 1) {
+          _controller.seekTo(seconds: hostTime, allowSeekAhead: true);
+        }
+      }
 
       setState(() {
         _duration = duration;
@@ -151,11 +214,25 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.play_arrow, color: Colors.white),
-                      onPressed: _controller.playVideo,
+                      onPressed: () {
+                        _controller.playVideo();
+                        if (_hostTest) {
+                          FirebaseDatabase.instance
+                              .ref('rooms/${widget.roomName}/playerState')
+                              .set(true);
+                        }
+                      },
                     ),
                     IconButton(
                       icon: const Icon(Icons.pause, color: Colors.white),
-                      onPressed: _controller.pauseVideo,
+                      onPressed: () {
+                        _controller.pauseVideo();
+                        if (_hostTest) {
+                          FirebaseDatabase.instance
+                              .ref('rooms/${widget.roomName}/playerState')
+                              .set(false);
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -167,14 +244,7 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
             flex: 1,
             child: Container(
               color: const Color.fromARGB(255, 30, 30, 30),
-              child: Row(
-                children: [
-                  Text(
-                    widget.roomName,
-                    style: TextStyle(color: Color.fromARGB(255, 0, 255, 55)),
-                  ),
-                ],
-              ),
+              child: ChatWidget(roomName: widget.roomName),
             ),
           ),
         ],

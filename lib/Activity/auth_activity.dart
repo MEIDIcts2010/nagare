@@ -69,7 +69,7 @@ class AuthActivity extends StatelessWidget {
                   height: 1.2,
                 ),
                 decoration: InputDecoration(
-                  hintText: ">> Enter your email",
+                  hintText: ">> Enter your username",
                   enabledBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.zero,
                     borderSide: BorderSide(
@@ -137,7 +137,7 @@ class AuthActivity extends StatelessWidget {
                 onPressed: () async {
                   try {
                     await FirebaseAuth.instance.signInWithEmailAndPassword(
-                      email: _controller.text,
+                      email: _controller.text + "@nagare.com",
                       password: _controller2.text,
                     );
                   } catch (e) {
@@ -168,7 +168,7 @@ class AuthActivity extends StatelessWidget {
                 onPressed: () async {
                   try {
                     await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                      email: _controller.text,
+                      email: _controller.text + "@nagare.com",
                       password: _controller2.text,
                     );
                   } catch (e) {
