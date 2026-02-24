@@ -19,7 +19,7 @@ class VkVideos {
 
 class VkSearchLogic {
   Future<List<VkVideos>> searchVideos(String query) async {
-    final uri = Uri.http(
+    final uri = Uri.parse(
       'https://api.vk.com/method/video.search?q=$query&access_token=vk1.a.RVmQS4iDmIDg6edm5FpE5IJ6_y30C7qMTpF8vCpWVmEUzT9jlX7H40pC8EGxf74BDDoz7fdSRy9NO52RZtxS4rfnSTeDiXYEpTzneW-r6kCn5TL1eU_rqDxD7epcXbDxQFpPUURCCOJoUSx1pOZ1rQiiMH_woAuBteXvMpVHnTA9N1jVPbNtkAtUtgxtVJDlsVrNOuIfrc6nPEXC4SYNEA&v=5.199',
     );
 
