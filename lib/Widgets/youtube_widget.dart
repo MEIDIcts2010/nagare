@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../Activity/home_page.dart';
+import '../Logic/createroom_logic.dart';
+import '../Activity/404.dart';
+import 'dart:html';
 
 class YoutubePlayerWidget extends StatefulWidget {
   final String videoId;
@@ -29,7 +33,7 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
   Timer? _timer;
 
   Future<void> _checkHost() async {
-    final id = FirebaseAuth.instance.currentUser!.uid;
+    final id = window.localStorage['uid'];
     final hostSnapshot = await FirebaseDatabase.instance
         .ref('rooms/${widget.roomName}/host')
         .get();
@@ -68,6 +72,7 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
     });
   }
 
+  //
   void _startPlayerStateSync() {
     FirebaseDatabase.instance
         .ref('rooms/${widget.roomName}/playerState')
@@ -111,6 +116,17 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
         }
       }
 
+      var existTest = await FirebaseDatabase.instance
+          .ref('rooms/${widget.roomName}')
+          .get();
+
+      if (!existTest.exists) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => Error404()),
+        );
+      }
+
       setState(() {
         _duration = duration;
         _currentTime = currentTime > duration ? duration : currentTime;
@@ -144,7 +160,7 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
       backgroundColor: const Color.fromARGB(255, 8, 10, 17),
       body: Row(
         children: [
-          Expanded(
+          Flexible(
             flex: 3,
             child: Column(
               children: [
@@ -154,12 +170,11 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => YoutubeSearch(),
-                            ),
+                        onPressed: () async {
+                          await deleteRoom(
+                            roomName: widget.roomName,
+                            uid: window.localStorage['uid']!,
+                            context: context,
                           );
                           dispose();
                         },
@@ -170,13 +185,8 @@ class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
                 ),
 
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 199, 14, 122),
-                        width: 1.5,
-                      ),
-                    ),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
                     child: YoutubePlayer(
                       controller: _controller,
                       aspectRatio: 16 / 9,

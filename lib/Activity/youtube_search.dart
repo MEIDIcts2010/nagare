@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nagare/Activity/create_room.dart';
-import 'package:nagare/Logic/createroom_logic.dart';
 import 'package:nagare/Logic/youtube_search_logic.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class YoutubeSearch extends StatefulWidget {
   @override
@@ -76,7 +74,11 @@ class _YoutubeSearchState extends State<YoutubeSearch> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => CreateRoom(video: video),
+                                builder: (context) => CreateRoom(
+                                  ownerId: '',
+                                  video: video.videoId,
+                                  source: 'yt',
+                                ),
                               ),
                             );
                           },

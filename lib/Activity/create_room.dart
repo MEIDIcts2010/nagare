@@ -11,8 +11,14 @@ import 'room.dart';
 DatabaseReference ref = FirebaseDatabase.instance.ref("test/test1");
 
 class CreateRoom extends StatelessWidget {
-  final YoutubeVideo video;
-  CreateRoom({required this.video});
+  final String video;
+  final String source;
+  final String ownerId;
+  CreateRoom({
+    required this.ownerId,
+    required this.video,
+    required this.source,
+  });
   TextEditingController controller = TextEditingController();
   TextEditingController controller1 = TextEditingController();
   TextEditingController controller2 = TextEditingController();
@@ -32,15 +38,20 @@ class CreateRoom extends StatelessWidget {
           TextButton(
             onPressed: () async {
               String? finalRoomName = await createroom_logic(
-                source: 'youtube',
-                videoid: video.videoId,
+                source: source,
+                videoid: video,
                 roomName: controller.text,
                 host: FirebaseAuth.instance.currentUser!.uid,
+                ownerId: ownerId,
               );
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => RoomScreen(roomName: finalRoomName!),
+                  builder: (context) => RoomScreen(
+                    roomName: finalRoomName!,
+                    source: source,
+                    ownerId: ownerId,
+                  ),
                 ),
               );
             },
@@ -54,7 +65,6 @@ class CreateRoom extends StatelessWidget {
 
 class JoinRoom extends StatelessWidget {
   TextEditingController controller = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,15 +72,26 @@ class JoinRoom extends StatelessWidget {
         children: [
           TextField(controller: controller),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               joinroom_logic(
                 roomName: controller.text,
                 uid: FirebaseAuth.instance.currentUser!.uid,
               );
+              final source = await FirebaseDatabase.instance
+                  .ref("rooms/${controller.text}/source")
+                  .get();
+              final ownerId = await FirebaseDatabase.instance
+                  .ref('rooms/${controller.text}/ownerId')
+                  .get();
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => RoomScreen(roomName: controller.text),
+                  builder: (context) => RoomScreen(
+                    ownerId: ownerId.value.toString(),
+                    roomName: controller.text,
+                    source: source.value.toString(),
+                  ),
                 ),
               );
             },
